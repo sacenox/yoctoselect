@@ -1,0 +1,9 @@
+bun.lock
+examples/
+src/*.test.ts
+TODO.md
+AGENTS.md
+biome.json
+knip.json
+lefthook.yml
+.prettierrc
