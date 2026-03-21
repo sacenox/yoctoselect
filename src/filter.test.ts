@@ -59,4 +59,31 @@ describe("prefixFilter", () => {
     ]);
     expect(prefixFilter(rich, "\x1b[31m")).toEqual([]);
   });
+
+  test("matches word prefix in filterText", () => {
+    const models = normalizeItems([
+      {
+        label: "Claude Sonnet 4",
+        value: "anthropic/claude-sonnet-4",
+        filterText: "anthropic/claude-sonnet-4 Claude Sonnet 4 anthropic",
+      },
+      {
+        label: "GPT-4o",
+        value: "openai/gpt-4o",
+        filterText: "openai/gpt-4o GPT-4o openai",
+      },
+    ]);
+    // "cl" matches "claude-sonnet-4" and "Claude" words
+    expect(prefixFilter(models, "cl").map((i) => i.value)).toEqual([
+      "anthropic/claude-sonnet-4",
+    ]);
+    // "Son" matches "Sonnet" word
+    expect(prefixFilter(models, "Son").map((i) => i.value)).toEqual([
+      "anthropic/claude-sonnet-4",
+    ]);
+    // "gpt" matches "gpt-4o" word
+    expect(prefixFilter(models, "gpt").map((i) => i.value)).toEqual([
+      "openai/gpt-4o",
+    ]);
+  });
 });

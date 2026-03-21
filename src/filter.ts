@@ -25,5 +25,11 @@ export function prefixFilter(
 ): NormalizedItem[] {
   if (!query) return items;
   const q = query.toLowerCase();
-  return items.filter((item) => item.filterText.toLowerCase().startsWith(q));
+  return items.filter((item) => {
+    const text = item.filterText.toLowerCase();
+    if (text.startsWith(q)) return true;
+    // Also match if any word in filterText starts with the query
+    const words = text.split(/[\s/]+/);
+    return words.some((word) => word.startsWith(q));
+  });
 }
