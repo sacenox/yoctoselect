@@ -21,7 +21,7 @@ describe("normalizeItems", () => {
     const result = normalizeItems([
       { label: "colored", value: "v", filterText: "plain" },
     ]);
-    expect(result[0]!.filterText).toBe("plain");
+    expect(result[0]?.filterText).toBe("plain");
   });
 });
 
