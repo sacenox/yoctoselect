@@ -81,3 +81,4 @@ AGENTS.md
 - No mocks or stubs in tests
 - Use 16 ANSI colors only (inherited from terminal theme)
 - Performance first
+- Use `bun` for everything: runtime, test runner, package manager, and `bunx` instead of `npx`

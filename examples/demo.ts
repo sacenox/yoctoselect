@@ -46,12 +46,32 @@ async function main() {
   });
   console.log(`Selected model: ${model}`);
 
-  console.log("\n=== Many items (overflow test) ===");
-  const items = Array.from(
-    { length: 30 },
-    (_, i) => `item-${String(i + 1).padStart(2, "0")}`,
+  console.log("\n=== Scrollable list browsing ===");
+  console.log(
+    c.dim("  Use ↑/↓ to scroll through all 50 items, Home/End to jump\n"),
   );
-  const item = await select({ items, maxVisible: 5 });
+  const colors = [
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "blue",
+    "indigo",
+    "violet",
+  ];
+  const items = Array.from({ length: 50 }, (_, i) => {
+    const color = colors[i % colors.length] as string;
+    return {
+      label: `${color}-${String(i + 1).padStart(2, "0")}  ${c.dim(`shade ${i + 1}`)}`,
+      value: `${color}-${i + 1}`,
+      filterText: `${color} ${i + 1}`,
+    };
+  });
+  const item = await select({
+    items,
+    maxVisible: 8,
+    placeholder: "browse or type to filter...",
+  });
   console.log(`Selected: ${item}`);
 }
 
