@@ -2,6 +2,7 @@ import * as c from "yoctocolors";
 import { clearDown, cursorUp, hideCursor, showCursor, write } from "./ansi.ts";
 import { type NormalizedItem, normalizeItems, prefixFilter } from "./filter.ts";
 import type { SelectOptions } from "./types.ts";
+import { type InputEvent, parseInput } from "./input.ts";
 import { adjustScroll, moveDown, moveUp } from "./viewport.ts";
 
 const DEFAULT_MAX_VISIBLE = 20;
@@ -89,77 +90,67 @@ export async function select(opts: SelectOptions): Promise<string | null> {
       resolve(result);
     }
 
-    function onData(buf: Buffer): void {
-      const key = buf.toString();
+    function handleEvent(event: InputEvent): boolean {
+      switch (event.type) {
+        case "escape":
+          cleanup(null);
+          return true;
 
-      // ESC (but not escape sequence)
-      if (key === "\x1b") {
-        cleanup(null);
-        return;
-      }
+        case "enter": {
+          const filtered = getFiltered();
+          const selected = filtered[highlightIndex];
+          cleanup(selected?.value ?? null);
+          return true;
+        }
 
-      // Enter
-      if (key === "\r" || key === "\n") {
-        const filtered = getFiltered();
-        const selected = filtered[highlightIndex];
-        cleanup(selected?.value ?? null);
-        return;
-      }
+        case "backspace":
+          if (query.length > 0) {
+            query = query.slice(0, -1);
+            highlightIndex = 0;
+            scrollOffset = 0;
+          }
+          return false;
 
-      // Backspace
-      if (key === "\x7f" || key === "\x08") {
-        if (query.length > 0) {
-          query = query.slice(0, -1);
+        case "up": {
+          const filtered = getFiltered();
+          highlightIndex = moveUp(highlightIndex, filtered.length);
+          updateScroll();
+          return false;
+        }
+
+        case "down": {
+          const filtered = getFiltered();
+          highlightIndex = moveDown(highlightIndex, filtered.length);
+          updateScroll();
+          return false;
+        }
+
+        case "home":
           highlightIndex = 0;
           scrollOffset = 0;
+          return false;
+
+        case "end": {
+          const filtered = getFiltered();
+          highlightIndex = Math.max(0, filtered.length - 1);
+          updateScroll();
+          return false;
         }
-        render();
-        return;
-      }
 
-      // Arrow up
-      if (key === "\x1b[A") {
-        const filtered = getFiltered();
-        highlightIndex = moveUp(highlightIndex, filtered.length);
-        updateScroll();
-        render();
-        return;
+        case "char":
+          query += event.char;
+          highlightIndex = 0;
+          scrollOffset = 0;
+          return false;
       }
+    }
 
-      // Arrow down
-      if (key === "\x1b[B") {
-        const filtered = getFiltered();
-        highlightIndex = moveDown(highlightIndex, filtered.length);
-        updateScroll();
-        render();
-        return;
+    function onData(buf: Buffer): void {
+      const events = parseInput(buf.toString());
+      for (const event of events) {
+        if (handleEvent(event)) return;
       }
-
-      // Home
-      if (key === "\x1b[H" || key === "\x1b[1~") {
-        highlightIndex = 0;
-        scrollOffset = 0;
-        render();
-        return;
-      }
-
-      // End
-      if (key === "\x1b[F" || key === "\x1b[4~") {
-        const filtered = getFiltered();
-        highlightIndex = Math.max(0, filtered.length - 1);
-        updateScroll();
-        render();
-        return;
-      }
-
-      // Printable characters
-      if (key.length === 1 && key >= " ") {
-        query += key;
-        highlightIndex = 0;
-        scrollOffset = 0;
-        render();
-        return;
-      }
+      render();
     }
 
     stdin.on("data", onData);

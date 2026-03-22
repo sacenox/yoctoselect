@@ -56,8 +56,10 @@ On each keystroke: move cursor up to the search line, clear from there down, re-
 ```
 src/
   index.ts          — public API (re-exports select)
-  select.ts         — select() implementation: stdin handling, render, filter
+  select.ts         — select() implementation: event handling, render, filter
+  input.ts          — stdin buffer parsing: tokenizes raw bytes into InputEvents
   filter.ts         — prefix match logic
+  viewport.ts       — scroll offset and highlight movement (pure functions)
   ansi.ts           — ANSI escape helpers (cursor movement, clear lines)
 tests/
   filter.test.ts    — test prefix matching
